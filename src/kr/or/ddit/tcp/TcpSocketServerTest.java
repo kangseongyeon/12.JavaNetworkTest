@@ -8,6 +8,9 @@ import java.net.Socket;
 public class TcpSocketServerTest {
 	public static void main(String[] args) throws IOException {
 		// TCP 소켓 통신을 위한 서버소켓 생성하기
+		
+		// 파라미터 => 코드 번호
+		// 코드 번호 역할 : host 안에 있는 또 다른 프로그램에 접근하기 위함
 		ServerSocket server = new ServerSocket(7777);
 		System.out.println("서버가 접속을 기다립니다...");
 		
