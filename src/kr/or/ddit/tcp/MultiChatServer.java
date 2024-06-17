@@ -28,12 +28,10 @@ public class MultiChatServer {
 			System.out.println("멀티챗 서버가 시작되었습니다...");
 
 			while (true) {
-				// 클라이언트의 접속요청을 기다린다
 				socket = serverSocket.accept();
 
 				System.out.println("[" + socket.getInetAddress() + " : " + socket.getPort() + "] 에서 접속하였습니다.");
 
-				// 사용자가 보내준 메시지를 처리하기 위한 스레드 생성 및 실행
 				ServerReceiver handler = new ServerReceiver(socket);
 				handler.start();
 			}
@@ -73,6 +71,29 @@ public class MultiChatServer {
 	public void sendMessage(String msg, String from) {
 		sendMessage("[" + from + "]" + msg);
 	}
+	
+	/**
+	 * 귓속말
+	 * @param msg  	  채팅 메시지
+ 	 * @param from 	  발신자 대화명
+	 * @param toName 수신자 대화명
+	 */
+	public void sendMessage(String msg, String from, String toName) {
+		try {
+			Socket targetSocket = clients.get(toName);
+			if (targetSocket != null) {
+				DataOutputStream dos = new DataOutputStream(targetSocket.getOutputStream());
+				dos.writeUTF("[from " + from + "] " + msg);
+			} else {
+				Socket fromSocket = clients.get(from);
+				DataOutputStream dos = new DataOutputStream(fromSocket.getOutputStream());
+				dos.writeUTF("[" + toName + "] 이 존재하지 않습니다.");
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
  
 	// 서버에서 클라이언트로부터 수신한 메시지를 처리하기 위한 클래스
 	// Inner 클래스로 정의함 (Inner 클래스는 부모 (Outer)클래스의 멤버들을 직접 접근할 수 있다.))
@@ -109,7 +130,18 @@ public class MultiChatServer {
 				
 				// 이 후의 메시지 처리는 채팅 메시지이다.
 				while(dis != null) {
-					sendMessage(dis.readUTF(), name);
+					String msg = dis.readUTF();
+					if (msg.trim().substring(0, 2).equals("/w")) {
+						String chat = msg.substring(3);
+						int chatIdx = chat.indexOf(" ");
+						if (chatIdx != -1) {
+							String toName = chat.substring(0, chatIdx);
+							String whisperMsg = chat.substring(chatIdx + 1);
+							sendMessage(whisperMsg, name, toName);
+						}
+					} else {
+						sendMessage(msg, name);
+					}
 				}
 
 			} catch (IOException ex) {

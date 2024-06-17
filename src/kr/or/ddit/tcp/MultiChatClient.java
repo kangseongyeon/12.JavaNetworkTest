@@ -4,25 +4,25 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Scanner;	
+import java.util.Scanner;
 
 public class MultiChatClient {
 	public void clientStart() throws IOException {
-		Socket socket = new Socket("192.168.36.131", 7777);
-		
+		Socket socket = new Socket("192.168.36.107", 7777);
+
 		System.out.println("멀티 챗 서버에 접속되었습니다.");
-		
+
 		// 송신용 스레드 생성 및 실행
 		ClientSender sender = new ClientSender(socket);
 		sender.start();
-		
+
 		// 수신용 스레드 생성 및 실행
 		ClientReceiver receiver = new ClientReceiver(socket);
 		receiver.start();
 	}
-	
+
 	class ClientSender extends Thread {
-		
+
 		private DataOutputStream dos;
 		private Scanner scan;
 
@@ -34,7 +34,7 @@ public class MultiChatClient {
 				e.printStackTrace();
 			}
 		}
-		
+
 		@Override
 		public void run() {
 			try {
@@ -43,7 +43,7 @@ public class MultiChatClient {
 					System.out.print("대화명 >> ");
 					dos.writeUTF(scan.nextLine());
 				}
-				
+
 				// 다음부터 보내느 메시지는 채팅메시지...
 				while (dos != null) {
 					dos.writeUTF(scan.nextLine());
@@ -52,13 +52,12 @@ public class MultiChatClient {
 				ex.printStackTrace();
 			}
 		}
-		
 	}
-	
+
 	class ClientReceiver extends Thread {
 
 		private DataInputStream dis;
-		
+
 		public ClientReceiver(Socket socket) {
 			try {
 				dis = new DataInputStream(socket.getInputStream());
@@ -66,6 +65,7 @@ public class MultiChatClient {
 				e.printStackTrace();
 			}
 		}
+
 		@Override
 		public void run() {
 			while (dis != null) {
@@ -77,9 +77,10 @@ public class MultiChatClient {
 				}
 			}
 		}
-		
+
 	}
-	public static void main(String[] args) throws Exception{
+
+	public static void main(String[] args) throws Exception {
 		new MultiChatClient().clientStart();
 	}
 }
