@@ -13,7 +13,7 @@ import java.net.URLDecoder;
 import java.util.StringTokenizer;
 
 /**
- * 간단한 웹서버 예
+ * 간단한 웹서버 예제
  */
 public class MyHTTPServer {
 	private final int PORT = 80;
@@ -25,21 +25,25 @@ public class MyHTTPServer {
 		ServerSocket serverSocket = null;
 
 		try {
+			// ServerSocket 객체를 생성하여 지정된 포트에서 클라이언트 연결 대기
 			serverSocket = new ServerSocket(this.PORT);
 			while (true) {
+				// 메서드 호출 시 클라이언트 연결 요청이 들어오면 Socket 객체 반환
 				Socket socket = serverSocket.accept();
 
+				// 클라이언트 연결이 들어오면 HttpHandler 객체를 생성하고..
 				HttpHandler handler = new HttpHandler(socket);
+				// start() 메서드를 호출해서 새로운 스레드 실행
 				handler.start();
 			}
 
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		} finally {
 			try {
 				serverSocket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
 		}
 	}
@@ -61,11 +65,13 @@ public class MyHTTPServer {
 
 			try {
 				out = new BufferedOutputStream(socket.getOutputStream());
+				// 소켓으로부터 오는 정보들을 문자열이라고 판단하고 문자열을 가지고 request 메세지에 readLine을 읽기 위함
 				br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 				// 요청 헤더정보 파싱하기
 
 				// Request Line
+				// 요청방식 (GET, POST 등), 요청경로, HTTP 버전 정보 포함
 				String reqLine = br.readLine(); // 첫줄은 요청라인
 
 				System.out.println("Request Line : " + reqLine);
@@ -73,11 +79,16 @@ public class MyHTTPServer {
 				String reqPath = "";		// 요청경로
 				
 				// 요청 페이지 정보 가져오기
+				// StringTokenizer를 사용하여 요청 라인을 토큰으로 분리함
+				// 요청 라인을 공백 문자를 기준으로 토큰화함
 				StringTokenizer st = new StringTokenizer(reqLine);
 				
+				// 반복문을 통해 토큰을 하나씩 확인
 				while (st.hasMoreElements()) {
+					// 현재 토근을 가져옴
 					String token = st.nextToken();
 					
+					// "/"으로 시작하는 토큰이 있다면.. reqPath에 저장
 					if (token.startsWith("/")) {
 						reqPath = token;
 						break;
@@ -103,8 +114,10 @@ public class MyHTTPServer {
 					return;
 				}
 				
+				// 파일이 존재하는 경우, makeResponseBody() 메서드를 호출하여 파일 내용을 byte 배열로 만듦
 				byte[] body = makeResponseBody(filePath);
 				
+				// makeResponseHeader() 메서드를 호출하여 HTTP 응답 헤더를 byte 배열로 만듦
 				byte[] header = makeResponseHeader(body.length, contentType);
 				
 				///////////////////////////////////////////////////////
@@ -114,6 +127,7 @@ public class MyHTTPServer {
 				
 				// 응답내용 보내기 전 반드시 Empty Line 보내기..
 				out.write("\r\n\r\n".getBytes());
+				
 				// 응답 내용 보내기
 				out.write(body);
 				
@@ -138,15 +152,16 @@ public class MyHTTPServer {
 	 * @param mimeType 컨텐츠 타입정보
 	 * @return 헤더내용 바이트배열
 	 */
+	//  contentLength와 mimeType을 입력받아 HTTP 응답 헤더를 생성
 	private byte[] makeResponseHeader(int contentLength, String mimeType) {
-		String header = "HTTP/1.1 200 OK\r\n"
-				+ "Server: MyHTTPServer 1.0]\r\n"
-				+ "Content-Length: " + contentLength + "\r\n"
-				+ "Content-Type: " + mimeType + "; charset = " + this.ENCODING; 
+		String header = "HTTP/1.1 200 OK\r\n"			// HTTP 응답 상태 확인
+				+ "Server: MyHTTPServer 1.0]\r\n"		// Server 헤더 필드
+				+ "Content-Length: " + contentLength + "\r\n"	// Content-Length 헤더 필드
+				+ "Content-Type: " + mimeType + "; charset = " + this.ENCODING; // Content-Type 헤더 필드
 		
 		System.out.println("header => " + header);
 		
-		return header.getBytes();
+		return header.getBytes();		// 헤더 문자열을 바이트 배열로 변환하여 반환
 	}
 	
 	/**
@@ -175,7 +190,6 @@ public class MyHTTPServer {
 				e.printStackTrace();
 			}
 		}
-		
 		return data;
 	}
 	

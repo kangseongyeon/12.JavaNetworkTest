@@ -27,6 +27,12 @@ public class UdpFileReceiver {
     * @throws IOException
     */
    
+   /* 
+    * receiveData : 1000 byte 버퍼 하나 준비 & 초기화 한 후,
+    * DatagramPacket을 통해서 receiver하며 쓰레드가 멈춤
+    * (상대방이 패킷을 send할 경우)
+    * getData 호출 -> 상대방이 보낸 byte 데이터를 가져올 수 있음
+   */
    public byte[] receiveData() throws IOException {
       buffer = new byte[1000]; // 버퍼 초기화
       dp = new DatagramPacket(buffer, buffer.length);
@@ -34,6 +40,7 @@ public class UdpFileReceiver {
       
       return dp.getData();
    }
+   
    
    public void start() throws IOException {
       
@@ -44,22 +51,23 @@ public class UdpFileReceiver {
       
       System.out.println("파일 수신 대기 중...");
       
+      // 문자열로 받음 (String으로 변환)
       String str = new String(receiveData()).trim();
       
       if(str.equals("start")) {
          
          // 전송 파일명 받기
          str = new String(receiveData()).trim();
-         FileOutputStream fos = new FileOutputStream("d:/D_Other/" + str);
+         FileOutputStream fos = new FileOutputStream("d:/D_Other/" + str);	// 저장하고 싶은 경로 => 경로 정보 저장
          
          // 전송 파일 크기(bytes) 받기
          str = new String(receiveData()).trim();
          fileSize = Long.parseLong(str);
          
+         // 얼마나 걸렸는지..
          long startTime = System.currentTimeMillis();
          
          while(true) {
-            
             byte[] data = receiveData();
             readBytes = dp.getLength(); // 받은 데이터의 크기
             fos.write(data, 0, readBytes);
@@ -69,6 +77,7 @@ public class UdpFileReceiver {
             System.out.println("진행 상태 : " + totalReadBytes + "/" + fileSize + " byte(s) ("
                   + (totalReadBytes * 100 / fileSize) + " %)");
             
+            // 파일을 다 받았다
             if(totalReadBytes >= fileSize) {
                break;
             }
